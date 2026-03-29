@@ -12,7 +12,7 @@
         android:id="@+id/editItemName"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:hint="What do you need to buy?"
+        android:hint="What to Buy?"
         android:inputType="text"
         app:layout_constraintEnd_toStartOf="@+id/buttonAdd"
         app:layout_constraintStart_toStartOf="parent"
