@@ -18,6 +18,11 @@ The View: Represents the user interface. Built using Android XML layouts (activi
 The Controller: Acts as the bridge between the View and the Model. MainActivity.java captures user input from the UI and commands the Model to update the database. Additionally, our GeofenceReceiver.java acts as an event-driven controller, listening for location broadcasts from the Android OS to trigger background notifications.
 ## 6. Process Architecture
 ## 7. Development Architecture
+The development architecture defines the software's static organization. For Yol Üstü, we utilize a standard Android Gradle build system structure.
+* **Data Persistence Layer:** We implement the Android Architecture Components Room library as an abstraction layer over SQLite. This ensures robust local data storage for our `ShoppingItem` entities and provides compile-time verification of SQL queries, minimizing runtime database crashes.
+
+
+
 ## 8. Physical Architecture
 ## 9. Scenarios
 To validate our architecture, we define the following core scenario (the "+1" of our view model), which illustrates how the logical, process, development, and physical views interact during a standard user journey:
