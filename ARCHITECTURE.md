@@ -25,10 +25,6 @@ The development architecture defines the software's static organization. For Yol
 
 
 ## 8. Physical Architecture
-The physical architecture maps the software components to the hardware of the mobile device. Yol Üstü operates entirely on the user's Android smartphone without relying on external cloud servers for core business logic.
-* Device Hardware: The application interfaces directly with the device's physical GPS receiver and location sensors.
-* Power Management: To mitigate the high battery drain typical of continuous GPS polling, the application utilizes the hardware's low-power geofencing capabilities. The Android OS offloads the boundary monitoring to the physical modem/sensor hub, waking the main CPU only when a geographic threshold is crossed.
-* Storage: Data is persisted physically on the device's internal flash memory using the Room SQLite database.
 ## 9. Scenarios
 To validate our architecture, we define the following core scenario (the "+1" of our view model), which illustrates how the logical, process, development, and physical views interact during a standard user journey:
 
