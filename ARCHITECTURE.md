@@ -17,7 +17,23 @@ The View: Represents the user interface. Built using Android XML layouts (activi
 
 The Controller: Acts as the bridge between the View and the Model. MainActivity.java captures user input from the UI and commands the Model to update the database. Additionally, our GeofenceReceiver.java acts as an event-driven controller, listening for location broadcasts from the Android OS to trigger background notifications.
 ## 6. Process Architecture
+   This section outlines how the application operates in the background and manages system resources during active use.
 
+6.1 Background Lifecycle Management
+To prioritize battery longevity, the application employs an event-driven architecture rather than maintaining a constant foreground presence. This is achieved through the Android Geofencing API:
+
+Idle State: The application process remains dormant when the user is outside the vicinity of a registered store, consuming negligible resources.
+
+System-Level Monitoring: Instead of taxing the battery with frequent GPS polling, the application delegates location tracking to the Android OS, which optimizes power consumption at the system level.
+
+6.2 The Geofence Receiver Logic
+The GeofenceReceiver.java component serves as the backbone of the app’s background functionality, managing the transition from location detection to user engagement:
+
+Wake-up Trigger: The OS broadcasts an "Intent" the moment a user crosses a predefined boundary (such as a BİM storefront).
+
+Instant Execution: The GeofenceReceiver activates momentarily to intercept this signal and confirm a GEOFENCE_TRANSITION_ENTER event.
+
+Notification Delivery: After validation, the receiver invokes the system’s Notification Manager. This ensures the user receives their alert promptly, even if the application has been cleared from the recent tasks list.
 ## 7. Development Architecture
 The development architecture defines the software's static organization. For Yol Üstü, we utilize a standard Android Gradle build system structure.
 * **Data Persistence Layer:** We implement the Android Architecture Components Room library as an abstraction layer over SQLite. This ensures robust local data storage for our `ShoppingItem` entities and provides compile-time verification of SQL queries, minimizing runtime database crashes.
