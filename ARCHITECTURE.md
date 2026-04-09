@@ -17,23 +17,24 @@ The View: Represents the user interface. Built using Android XML layouts (activi
 
 The Controller: Acts as the bridge between the View and the Model. MainActivity.java captures user input from the UI and commands the Model to update the database. Additionally, our GeofenceReceiver.java acts as an event-driven controller, listening for location broadcasts from the Android OS to trigger background notifications.
 ## 6. Process Architecture
-This section describes the dynamic execution of the application and how background tasks are managed.
+6. Dynamic Execution & Background Management
+   This section outlines how the application operates in the background and manages system resources during active use.
 
-6.1 Background Lifecycle
-The application is designed to be "Event-Driven" to maximize battery efficiency. Instead of a continuous foreground process, we utilize the Android Geofencing API.
+6.1 Background Lifecycle Management
+To prioritize battery longevity, the application employs an event-driven architecture rather than maintaining a constant foreground presence. This is achieved through the Android Geofencing API:
 
-Idle State: When the user is not near a store, the application process remains inactive (Idle).
+Idle State: The application process remains dormant when the user is outside the vicinity of a registered store, consuming negligible resources.
 
-System Monitoring: The Android OS handles location monitoring at the system level, which is much more power-efficient than standard GPS polling.
+System-Level Monitoring: Instead of taxing the battery with frequent GPS polling, the application delegates location tracking to the Android OS, which optimizes power consumption at the system level.
 
-6.2 The Geofence Receiver Process
-The core of our background logic is the GeofenceReceiver.java. This component handles the critical transition from a physical location event to a user notification:
+6.2 The Geofence Receiver Logic
+The GeofenceReceiver.java component serves as the backbone of the app’s background functionality, managing the transition from location detection to user engagement:
 
-Wake-up Trigger: When the device enters a pre-defined geofence (e.g., BİM coordinates), the OS sends a "Broadcast Intent".
+Wake-up Trigger: The OS broadcasts an "Intent" the moment a user crosses a predefined boundary (such as a BİM storefront).
 
-Execution: The GeofenceReceiver wakes up instantly to catch this intent. It runs as a short-lived background process to verify the GEOFENCE_TRANSITION_ENTER event.
+Instant Execution: The GeofenceReceiver activates momentarily to intercept this signal and confirm a GEOFENCE_TRANSITION_ENTER event.
 
-Notification Service: Once validated, the receiver triggers the system's Notification Manager to alert the user. This ensures the user gets the reminder even if the app was manually closed.
+Notification Delivery: After validation, the receiver invokes the system’s Notification Manager. This ensures the user receives their alert promptly, even if the application has been cleared from the recent tasks list.
 ## 7. Development Architecture
 The development architecture defines the software's static organization. For Yol Üstü, we utilize a standard Android Gradle build system structure.
 * **Data Persistence Layer:** We implement the Android Architecture Components Room library as an abstraction layer over SQLite. This ensures robust local data storage for our `ShoppingItem` entities and provides compile-time verification of SQL queries, minimizing runtime database crashes.
