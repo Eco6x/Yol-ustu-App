@@ -18,15 +18,15 @@ The View: Represents the user interface. Built using Android XML layouts (activi
 The Controller: Acts as the bridge between the View and the Model. MainActivity.java captures user input from the UI and commands the Model to update the database. Additionally, our GeofenceReceiver.java acts as an event-driven controller, listening for location broadcasts from the Android OS to trigger background notifications.
 ## 6. Process Architecture
 This section outlines how the application operates in the background and manages system resources during active use.
-
-6.1 Background Lifecycle Managementit 
+        
+**6.1 Background Lifecycle Management**
 To prioritize battery longevity, the application employs an event-driven architecture rather than maintaining a constant foreground presence. This is achieved through the Android Geofencing API:
 
 Idle State: The application process remains dormant when the user is outside the vicinity of a registered store, consuming negligible resources.
 
 System-Level Monitoring: Instead of taxing the battery with frequent GPS polling, the application delegates location tracking to the Android OS, which optimizes power consumption at the system level.
 
-6.2 The Geofence Receiver Logic
+**6.2 The Geofence Receiver Logic**
 The GeofenceReceiver.java component serves as the backbone of the app’s background functionality, managing the transition from location detection to user engagement:
 
 Wake-up Trigger: The OS broadcasts an "Intent" the moment a user crosses a predefined boundary (such as a BİM storefront).
@@ -34,6 +34,7 @@ Wake-up Trigger: The OS broadcasts an "Intent" the moment a user crosses a prede
 Instant Execution: The GeofenceReceiver activates momentarily to intercept this signal and confirm a GEOFENCE_TRANSITION_ENTER event.
 
 Notification Delivery: After validation, the receiver invokes the system’s Notification Manager. This ensures the user receives their alert promptly, even if the application has been cleared from the recent tasks list.
+
 ## 7. Development Architecture
 The development architecture defines the software's static organization. For Yol Üstü, we utilize a standard Android Gradle build system structure.
 * **Data Persistence Layer:** We implement the Android Architecture Components Room library as an abstraction layer over SQLite. This ensures robust local data storage for our `ShoppingItem` entities and provides compile-time verification of SQL queries, minimizing runtime database crashes.
@@ -41,20 +42,26 @@ The development architecture defines the software's static organization. For Yol
 
 
 ## 8. Physical Architecture
+The physical architecture maps the software components to the hardware of the mobile device. Yol Üstü operates entirely on the user's Android smartphone without relying on external cloud servers for core business logic.
+* **Device Hardware:** The application interfaces directly with the device's physical GPS receiver and location sensors.
+* **Power Management:** To mitigate the high battery drain typical of continuous GPS polling, the application utilizes the hardware's low-power geofencing capabilities. The Android OS offloads the boundary monitoring to the physical modem/sensor hub, waking the main CPU only when a geographic threshold is crossed.
+* **Storage:** Data is persisted physically on the device's internal flash memory using the Room SQLite database.
+
+
 ## 9. Scenarios
 To validate our architecture, we define the following core scenario (the "+1" of our view model), which illustrates how the logical, process, development, and physical views interact during a standard user journey:
 
 Scenario 1: Adding an Item and Triggering a Geofence Notification
 
-User Input (Logical/View): The user opens the application and types "Milk" into the activity_main.xml input field and selects "BİM" as the target market.
+* User Input (Logical/View): The user opens the application and types "Milk" into the activity_main.xml input field and selects "BİM" as the target market.
 
-Data Storage (Development/Model): The controller (MainActivity.java) receives this input and writes a new ShoppingItem record into the local SQLite database.
+* Data Storage (Development/Model): The controller (MainActivity.java) receives this input and writes a new ShoppingItem record into the local SQLite database.
 
-Hardware Registration (Physical): The application registers a geofence with the physical device's GPS hardware using the predefined coordinates for the selected market. The user then closes the application.
+* Hardware Registration (Physical): The application registers a geofence with the physical device's GPS hardware using the predefined coordinates for the selected market. The user then closes the application.
 
-Background Processing (Process): The application enters an idle state. Later, when the user physically walks within a 100-meter radius of the BİM coordinates, the Android OS broadcasts a location event.
+* Background Processing (Process): The application enters an idle state. Later, when the user physically walks within a 100-meter radius of the BİM coordinates, the Android OS broadcasts a location event.
 
-Event Handling & Notification (Process/Controller): The GeofenceReceiver.java wakes up in the background, intercepts the broadcast, and pushes a high-priority notification to the user's lock screen reminding them to buy "Milk".
+* Event Handling & Notification (Process/Controller): The GeofenceReceiver.java wakes up in the background, intercepts the broadcast, and pushes a high-priority notification to the user's lock screen reminding them to buy "Milk".
 ## 10. Size and Performance
 ## 11. Quality
 
