@@ -1,36 +1,35 @@
 # Title Page
 **Document:** Software Architecture Document
 
-**Project:** Yol Üstü (Location-Aware Groceries Reminder)
-
-**Team Members:** 
-* Ammar Hajar 210513474
-* Abdulkadir Janabi 230513563
-* Muhammad Yaseen 210513413
-* Taha Hatahet 230513382
+**Project:** Yol Üstü (Location-based Groceries Reminder)
 
 ## Change History
-Date------|Version| Description
-
-
-10-04-2026|-v0.1-| Finished prototype before implementing the required final touches
+| Version | Date | Author | Description |
+| :--- | :--- | :--- | :--- |
+| 0.10 | 2026-04-10 | Yol Üstü Team | Initial release of the 4+1 Architecture Document and final project merge. |
 
 ## Table of Contents
-1. Scope
-2. References
-3. Software Architecture
-4. Architectural Goals & Constraints
-5. Logical Architecture
-6. Process Architecture
-7. Development Architecture
-8. Physical Architecture
-9. Scenarios
-10. Size and Performance
-11. Quality
-12. Appendices
+* [1. Scope](#1-scope)
+* [2. References](#2-references)
+* [3. Software Architecture](#3-software-architecture)
+* [4. Architectural Goals & Constraints](#4-architectural-goals--constraints)
+* [5. Logical Architecture](#5-logical-architecture)
+* [6. Process Architecture](#6-process-architecture)
+* [7. Development Architecture](#7-development-architecture)
+* [8. Physical Architecture](#8-physical-architecture)
+* [9. Scenarios](#9-scenarios)
+* [10. Size and Performance](#10-size-and-performance)
+* [11. Quality](#11-quality)
+* [12. Appendices](#12-appendices)
 
 
 ## List of Figures
+| Figure No | Description | Section Reference |
+| :--- | :--- | :--- |
+| **Figure 1** | Main UI Screen| [5. Logical Architecture](#images/test1.png) |
+| **Figure 2** | N/A | TBA |
+| **Figure 3** | N/A | TBA |
+| **Figure 4** | N/A | TBA |
 
 ## 1. Scope
 This document details the software architecture of the Yol Üstü mobile application. Yol Üstü is a location-aware Android shopping list designed to cross-reference user-defined grocery items with the real-world physical locations of supermarkets (e.g., BİM, A101, Şok). 
@@ -60,11 +59,11 @@ The architecture of Yol Üstü is documented using the Kruchten 4+1 View Model. 
   - Local Storage: Because there is no external backend/cloud server, all data persistence is constrained to the device's physical hardware capacity.
 
 ## 5. Logical Architecture
-Our logical architecture follows the Model-View-Controller (MVC) pattern to separate the application's internal data from the user interface. This separation of concerns ensures that our location tracking logic does not interfere with the UI thread.
+* Our logical architecture follows the Model-View-Controller (MVC) pattern to separate the application's internal data from the user interface. This separation of concerns ensures that our location tracking logic does not interfere with the UI thread.
 
-The Model: Represents the application's data layer. We utilize a local SQLite database (managed via Android Room) to define the ShoppingItem entities. This layer handles the storage and retrieval of user-entered grocery items and their associated market locations.
+* The Model: Represents the application's data layer. We utilize a local SQLite database (managed via Android Room) to define the ShoppingItem entities. This layer handles the storage and retrieval of user-entered grocery items and their associated market locations.
 
-The View: Represents the user interface. Built using Android XML layouts (activity_main.xml) and a RecyclerView with a custom ListAdapter, this layer strictly observes the data and renders the current shopping list to the user. It contains no heavy business logic.
+* The View: Represents the user interface. Built using Android XML layouts (activity_main.xml) and a RecyclerView with a custom ListAdapter, this layer strictly observes the data and renders the current shopping list to the user. It contains no heavy business logic.
 
 *Figure 1: The application's main user interface.*
 
@@ -81,20 +80,21 @@ The View: Represents the user interface. Built using Android XML layouts (activi
 This section outlines how the application operates in the background and manages system resources during active use.
         
 **6.1 Background Lifecycle Management**
-To prioritize battery longevity, the application employs an event-driven architecture rather than maintaining a constant foreground presence. This is achieved through the Android Geofencing API:
 
-Idle State: The application process remains dormant when the user is outside the vicinity of a registered store, consuming negligible resources.
+* To prioritize battery longevity, the application employs an event-driven architecture rather than maintaining a constant foreground presence. This is achieved through the Android Geofencing API:
 
-System-Level Monitoring: Instead of taxing the battery with frequent GPS polling, the application delegates location tracking to the Android OS, which optimizes power consumption at the system level.
+  - Idle State: The application process remains dormant when the user is outside the vicinity of a registered store, consuming negligible resources.
+  - System-Level Monitoring: Instead of taxing the battery with frequent GPS polling, the application delegates location tracking to the Android OS, which optimizes power consumption at the system level.
 
 **6.2 The Geofence Receiver Logic**
-The GeofenceReceiver.java component serves as the backbone of the app’s background functionality, managing the transition from location detection to user engagement:
 
-Wake-up Trigger: The OS broadcasts an "Intent" the moment a user crosses a predefined boundary (such as a BİM storefront).
+* The GeofenceReceiver.java component serves as the backbone of the app’s background functionality, managing the transition from location detection to user engagement:
 
-Instant Execution: The GeofenceReceiver activates momentarily to intercept this signal and confirm a GEOFENCE_TRANSITION_ENTER event.
+  - Wake-up Trigger: The OS broadcasts an "Intent" the moment a user crosses a predefined boundary (such as a BİM storefront).
 
-Notification Delivery: After validation, the receiver invokes the system’s Notification Manager. This ensures the user receives their alert promptly, even if the application has been cleared from the recent tasks list.
+  - Instant Execution: The GeofenceReceiver activates momentarily to intercept this signal and confirm a GEOFENCE_TRANSITION_ENTER event.
+
+  - Notification Delivery: After validation, the receiver invokes the system’s Notification Manager. This ensures the user receives their alert promptly, even if the application has been cleared from the recent tasks list.
 
 ## 7. Development Architecture
 The development architecture defines the software's static organization. For Yol Üstü, we utilize a standard Android Gradle build system structure.
@@ -146,6 +146,8 @@ To ensure system quality, the architecture prioritizes Reliability and Maintaina
 * OS: Operating System
 
 * PR: Pull Request
+
+* TBA: To Be Added 
 
 ### Definitions
 * Geofence: A virtual geographic boundary defined by GPS coordinates and a specific radius.
