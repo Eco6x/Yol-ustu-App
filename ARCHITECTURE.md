@@ -33,7 +33,10 @@ Date------|Version| Description
 ## List of Figures
 
 ## 1. Scope
-This document details the software architecture of the Yol Üstü mobile application. Yol Üstü is a location-aware Android shopping list designed to cross-reference user-defined grocery items with the real-world physical locations of supermarkets (e.g., BİM, A101, Şok). The scope of this document covers the internal structure of the local Android client, detailing the integration of the Room database for local storage and Google Play Services for background geofencing.
+This document details the software architecture of the Yol Üstü mobile application. Yol Üstü is a location-aware Android shopping list designed to cross-reference user-defined grocery items with the real-world physical locations of supermarkets (e.g., BİM, A101, Şok). 
+
+The scope of this document covers the internal structure of the local Android client, detailing the integration of the Room database for local storage and Google Play Services for background geofencing.
+
 
 ## 2. References
 * Kruchten, P.B. (1995). "The 4+1 View Model of architecture". IEEE Software.
@@ -68,9 +71,11 @@ The View: Represents the user interface. Built using Android XML layouts (activi
 
 ![Yol Üstü UI Overview](images/test1.png)
 
-The Controller: Acts as the bridge between the View and the Model. 
-MainActivity.java captures user input from the UI and commands the Model to update the database.
-Additionally, our GeofenceReceiver.java acts as an event-driven controller, listening for location broadcasts from the Android OS to trigger background notifications.
+* The Controller: Acts as the bridge between the View and the Model.
+
+* MainActivity.java captures user input from the UI and commands the Model to update the database.
+
+* Additionally, our GeofenceReceiver.java acts as an event-driven controller, listening for location broadcasts from the Android OS to trigger background notifications.
 
 ## 6. Process Architecture
 This section outlines how the application operates in the background and manages system resources during active use.
