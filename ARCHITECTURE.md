@@ -68,7 +68,9 @@ The View: Represents the user interface. Built using Android XML layouts (activi
 
 ![Yol Üstü UI Overview](images/test1.png)
 
-The Controller: Acts as the bridge between the View and the Model. MainActivity.java captures user input from the UI and commands the Model to update the database. Additionally, our GeofenceReceiver.java acts as an event-driven controller, listening for location broadcasts from the Android OS to trigger background notifications.
+The Controller: Acts as the bridge between the View and the Model. 
+MainActivity.java captures user input from the UI and commands the Model to update the database.
+Additionally, our GeofenceReceiver.java acts as an event-driven controller, listening for location broadcasts from the Android OS to trigger background notifications.
 
 ## 6. Process Architecture
 This section outlines how the application operates in the background and manages system resources during active use.
