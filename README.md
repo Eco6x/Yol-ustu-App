@@ -1,8 +1,8 @@
-# Yol Üstü: Location-Based Grocery Reminder
+# 📍 Yol Üstü:  Location-Based Grocery Reminder
 
-**Video Demo:** Coming soon! :)
+🎞**Video Demo:** Coming soon! :)
 
-## Project Description
+## ✍🏻 Project Description
 
 "Yol Üstü" is a location-aware Android application designed to bridge the gap between digital shopping lists and the physical world. 
 Forgetting essential items like bread or milk is a common frustration especially for students living abroad, often happening because of responsiblities students have during their daily lives. 
@@ -12,7 +12,7 @@ The core functionality revolves around a clean, distraction-free user interface 
 
 This project was developed as part of our Software Architecture coursework at Altınbaş University. It required us to integrate several complex Android concepts, including background services, dynamic permission requests, local data persistence, and efficient API utilization. The end result is a practical, lightweight utility tool that demonstrates a strong understanding of mobile software architecture and user-centric design.
 
-## File Structure & Descriptions
+## 📚 File Structure & Descriptions
 
 Below is a breakdown of the core files written for this project and their specific responsibilities:
 
@@ -29,12 +29,23 @@ Below is a breakdown of the core files written for this project and their specif
 
 * `activity_main.xml`: The primary frontend layout file, designed using Material Design guidelines to provide a clean and intuitive user experience.
 
-## Design Choices & Technical Debates
+##  🛠️ Design Choices & Technical Debates
 
 During development, our team faced several architectural decisions. 
 
 **Balancing Battery Life and Precision**
-Our primary technical hurdle involved optimizing location tracking. While we initially weighed the merits of continuous GPS polling for high-resolution coordinates, it became clear that the resulting power consumption would lead to a poor user experience and high churn. To solve this, we integrated the Google Play Services Geofencing API. By offloading the monitoring to the Android system and only triggering the app when specific boundaries are breached, we achieved a sustainable equilibrium between notification accuracy and battery conservation.
+* Our primary technical hurdle involved optimizing location tracking. While we initially weighed the merits of continuous GPS polling for high-resolution coordinates, it became clear that the resulting power consumption would lead to a poor user experience and high churn. To solve this, we integrated the Google Play Services Geofencing API. By offloading the monitoring to the Android system and only triggering the app when specific boundaries are breached, we achieved a sustainable equilibrium between notification accuracy and battery conservation.
 
 **Evaluating Local Storage Solutions**
-We also carefully considered whether to utilize SharedPreferences, standard SQLite, or the Room Persistence Library for managing shopping data. SharedPreferences proved insufficient for the complex relational requirements of linking items to geographic data, and while raw SQLite was a viable engine, the manual overhead was excessive. We ultimately selected Room; its ability to provide compile-time query validation and its seamless fit with modern Android design patterns allowed us to minimize structural bugs and significantly shorten our development cycle.
+* We also carefully considered whether to utilize SharedPreferences, standard SQLite, or the Room Persistence Library for managing shopping data. SharedPreferences proved insufficient for the complex relational requirements of linking items to geographic data, and while raw SQLite was a viable engine, the manual overhead was excessive. We ultimately selected Room; its ability to provide compile-time query validation and its seamless fit with modern Android design patterns allowed us to minimize structural bugs and significantly shorten our development cycle.
+
+
+📔For a detailed breakdown of our system design, please read the [Architecture.md File](ARCHITECTURE.md).📔
+
+## 👨‍💻 Team Members
+| Studend ID | Name | GitHub Username |
+|------------|------|-----------------|
+| 210513474 | Ammar Hajar | Eco6x |
+| 210513413 | Mohammad Yaseen | muhammedeluveyfi-prog|
+| 230513563 | Abdulkadir Janabi | FX-VXI |
+| 230513382 | Taha Hatahet | Tahaaaaaaaaaaaaaaaaaaa |
