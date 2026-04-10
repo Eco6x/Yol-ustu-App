@@ -4,16 +4,12 @@ plugins {
 
 android {
     namespace = "com.progz.yolustu"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.progz.yolustu"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
@@ -40,6 +36,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
+    implementation(libs.play.services.location)
     implementation("androidx.room:room-runtime:2.6.1")
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

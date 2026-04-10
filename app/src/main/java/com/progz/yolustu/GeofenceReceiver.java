@@ -1,4 +1,4 @@
-package com.eco6x.yolustu;
+package com.progz.yolustu;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -18,7 +18,7 @@ public class GeofenceReceiver extends BroadcastReceiver {
         GeofencingEvent geofencingEvent = GeofencingEvent.fromIntent(intent);
 
         if (geofencingEvent.hasError()) {
-            Log.e(TAG, "Geofencing Error: " + geofencingEvent.getErrorCode())
+            Log.e(TAG, "Geofencing Error: " + geofencingEvent.getErrorCode());
             return;
         }
 
