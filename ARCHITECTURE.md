@@ -1,21 +1,72 @@
 # Title Page
+**Document:** Software Architecture Document
+
+**Project:** Yol Üstü (Location-Aware Groceries Reminder)
+
+**Team Members:** 
+* Ammar Hajar 210513474
+* Abdulkadir Janabi 230513563
+* Muhammad Yaseen 210513413
+* Taha Hatahet 230513382
 
 ## Change History
+Date------|Version| Description
+
+
+10-04-2026|-v0.1-| Finished prototype before implementing the required final touches
+
 ## Table of Contents
+1. Scope
+2. References
+3. Software Architecture
+4. Architectural Goals & Constraints
+5. Logical Architecture
+6. Process Architecture
+7. Development Architecture
+8. Physical Architecture
+9. Scenarios
+10. Size and Performance
+11. Quality
+12. Appendices
+
+
 ## List of Figures
 
 ## 1. Scope
+This document details the software architecture of the Yol Üstü mobile application. Yol Üstü is a location-aware Android shopping list designed to cross-reference user-defined grocery items with the real-world physical locations of supermarkets (e.g., BİM, A101, Şok). The scope of this document covers the internal structure of the local Android client, detailing the integration of the Room database for local storage and Google Play Services for background geofencing.
+
 ## 2. References
+* Kruchten, P.B. (1995). "The 4+1 View Model of architecture". IEEE Software.
+
+* Android Developers Documentation: Geofencing API and Background Location Limits.
+
+* Android Developers Documentation: Save data in a local database using Room.
+
 ## 3. Software Architecture
+The architecture of Yol Üstü is documented using the Kruchten 4+1 View Model. This framework allows us to dissect the system from the perspectives of different stakeholders (end-users, developers, system engineers) by separating the system into Logical, Process, Development, and Physical views, unified by core Use Case Scenarios.
+
 ## 4. Architectural Goals & Constraints
+**Goals**
+* Battery Efficiency: The primary goal is to provide background location tracking without causing noticeable battery drain.
+
+* Offline Capability: The app must function entirely offline, storing all shopping list data and market coordinates locally.
+
+**Constraints**
+  - OS Restrictions: The architecture is heavily constrained by Android's strict background processing and location permission rules (Android 10+).
+
+  - Local Storage: Because there is no external backend/cloud server, all data persistence is constrained to the device's physical hardware capacity.
+
 ## 5. Logical Architecture
 Our logical architecture follows the Model-View-Controller (MVC) pattern to separate the application's internal data from the user interface. This separation of concerns ensures that our location tracking logic does not interfere with the UI thread.
 
 The Model: Represents the application's data layer. We utilize a local SQLite database (managed via Android Room) to define the ShoppingItem entities. This layer handles the storage and retrieval of user-entered grocery items and their associated market locations.
 
 The View: Represents the user interface. Built using Android XML layouts (activity_main.xml) and a RecyclerView with a custom ListAdapter, this layer strictly observes the data and renders the current shopping list to the user. It contains no heavy business logic.
+*Figure 1: The application's main user interface.*
+![Yol Üstü UI Overview](images/app_ui.png)
 
 The Controller: Acts as the bridge between the View and the Model. MainActivity.java captures user input from the UI and commands the Model to update the database. Additionally, our GeofenceReceiver.java acts as an event-driven controller, listening for location broadcasts from the Android OS to trigger background notifications.
+
 ## 6. Process Architecture
 This section outlines how the application operates in the background and manages system resources during active use.
         
@@ -62,17 +113,38 @@ Scenario 1: Adding an Item and Triggering a Geofence Notification
 * Background Processing (Process): The application enters an idle state. Later, when the user physically walks within a 100-meter radius of the BİM coordinates, the Android OS broadcasts a location event.
 
 * Event Handling & Notification (Process/Controller): The GeofenceReceiver.java wakes up in the background, intercepts the broadcast, and pushes a high-priority notification to the user's lock screen reminding them to buy "Milk".
+
 ## 10. Size and Performance
+**Size**
+* The application footprint is expected to be minimal (under 20MB), as it relies primarily on native Android libraries and does not package heavy external media assets.
+
+**Performance**
+* The critical performance metric is the geofence transition latency. The system is designed to trigger a local notification within 1-2 minutes of the device's GPS hardware registering a boundary breach, dependent on the OS's internal hardware polling interval.
+
 ## 11. Quality
+To ensure system quality, the architecture prioritizes Reliability and Maintainability. Reliability is addressed by utilizing the robust Room database to prevent SQL injection and data corruption. Maintainability is achieved through strict adherence to the MVC design pattern, ensuring that UI updates, data storage, and background location services are thoroughly decoupled.
 
 ## Appendices
 
 ### Acronyms and Abbreviations
+* MVC: Model-View-Controller
+
+* API: Application Programming Interface
+
+* GPS: Global Positioning System
+
+* OS: Operating System
+
+* PR: Pull Request
+
 ### Definitions
+* Geofence: A virtual geographic boundary defined by GPS coordinates and a specific radius.
+
+* Room: An Android library that provides an abstraction layer over SQLite to allow fluent database access.
+
+* BroadcastReceiver: An Android component that allows an application to register for system or application events.
+
 ### Design Principles
+* Separation of Concerns: Distinct layers for the user interface, business logic, and data access.
 
-
-
-
-
-
+* Event-Driven Execution: Utilizing system broadcasts rather than infinite loops to save system resources.
