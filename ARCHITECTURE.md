@@ -3,10 +3,6 @@
 
 **Project:** Yol Üstü (Location-based Groceries Reminder)
 
-## Change History
-| Version | Date | Author | Description |
-| :--- | :--- | :--- | :--- |
-| 0.10 | 2026-04-10 | Yol Üstü Team | Initial release of the 4+1 Architecture Document and final project merge. |
 
 ## Table of Contents
 * [1. Scope](#1-scope)
@@ -17,10 +13,12 @@
 * [6. Process Architecture](#6-process-architecture)
 * [7. Development Architecture](#7-development-architecture)
 * [8. Physical Architecture](#8-physical-architecture)
-* [9. Scenarios](#9-scenarios)
-* [10. Size and Performance](#10-size-and-performance)
-* [11. Quality](#11-quality)
-* [12. Appendices](#12-appendices)
+* [9. File Structure & Descriptions](#9-File-Structure-&-Descriptions)
+* [10. Design Choices & Technical Debates](#10.-Design-Choices-&-Technical-Debates)
+* [11. Scenarios](#11-scenarios)
+* [12. Size and Performance](#12-size-and-performance)
+* [13. Quality](#13-quality)
+* [14. Appendices](#14-appendices)
 
 
 ## List of Figures
@@ -32,7 +30,7 @@
 | **Figure 4** | N/A | TBA |
 
 ## 1. Scope
-This document details the software architecture of the Yol Üstü mobile application. Yol Üstü is a location-aware Android shopping list designed to cross-reference user-defined grocery items with the real-world physical locations of supermarkets (e.g., BİM, A101, Şok). 
+This document details the software architecture of the Yol Üstü mobile application. Yol Üstü is a location-aware Android shopping list designed to cross-reference user-defined grocery items with the real-world physical locations of supermarkets (e.g., BİM, A101, Şok).
 
 The scope of this document covers the internal structure of the local Android client, detailing the integration of the Room database for local storage and Google Play Services for background geofencing.
 
@@ -54,9 +52,9 @@ The architecture of Yol Üstü is documented using the Kruchten 4+1 View Model. 
 * Offline Capability: The app must function entirely offline, storing all shopping list data and market coordinates locally.
 
 **Constraints**
-  - OS Restrictions: The architecture is heavily constrained by Android's strict background processing and location permission rules (Android 10+).
+- OS Restrictions: The architecture is heavily constrained by Android's strict background processing and location permission rules (Android 10+).
 
-  - Local Storage: Because there is no external backend/cloud server, all data persistence is constrained to the device's physical hardware capacity.
+- Local Storage: Because there is no external backend/cloud server, all data persistence is constrained to the device's physical hardware capacity.
 
 ## 5. Logical Architecture
 * Our logical architecture follows the Model-View-Controller (MVC) pattern to separate the application's internal data from the user interface. This separation of concerns ensures that our location tracking logic does not interfere with the UI thread.
@@ -78,7 +76,7 @@ The architecture of Yol Üstü is documented using the Kruchten 4+1 View Model. 
 
 ## 6. Process Architecture
 This section outlines how the application operates in the background and manages system resources during active use.
-        
+
 **6.1 Background Lifecycle Management**
 
 * To prioritize battery longevity, the application employs an event-driven architecture rather than maintaining a constant foreground presence. This is achieved through the Android Geofencing API:
@@ -101,15 +99,42 @@ The development architecture defines the software's static organization. For Yol
 * **Data Persistence Layer:** We implement the Android Architecture Components Room library as an abstraction layer over SQLite. This ensures robust local data storage for our `ShoppingItem` entities and provides compile-time verification of SQL queries, minimizing runtime database crashes.
 
 
-
 ## 8. Physical Architecture
 The physical architecture maps the software components to the hardware of the mobile device. Yol Üstü operates entirely on the user's Android smartphone without relying on external cloud servers for core business logic.
 * **Device Hardware:** The application interfaces directly with the device's physical GPS receiver and location sensors.
 * **Power Management:** To mitigate the high battery drain typical of continuous GPS polling, the application utilizes the hardware's low-power geofencing capabilities. The Android OS offloads the boundary monitoring to the physical modem/sensor hub, waking the main CPU only when a geographic threshold is crossed.
 * **Storage:** Data is persisted physically on the device's internal flash memory using the Room SQLite database.
 
+## 9. File Structure & Descriptions
 
-## 9. Scenarios
+Below is a breakdown of the core files written for this project and their specific responsibilities:
+
+* `MainActivity.java`: The main entry point of the application. It initializes the UI, checks for necessary location permissions, and hosts the `RecyclerView` that displays the active shopping list.
+
+* `GeofenceReceiver.java`: A `BroadcastReceiver` that runs in the background. It listens for transition events from the Google Play Services API (specifically, entering a geofenced area) and triggers the local push notification.
+
+
+* `ItemDatabase.java`: Contains the Room Database configuration. It defines the SQLite database instance and provides the Data Access Object (DAO) connections.
+
+* `ShoppingItem.java`: The entity class representing a single grocery item. It defines the table structure, including columns for the item name, associated store, and a boolean for its completed status.
+
+* `ListAdapter.java`: Manages the data binding for the user interface. It takes the list of items from the database and inflates the individual XML row layouts for the main screen.
+
+* `activity_main.xml`: The primary frontend layout file, designed using Material Design guidelines to provide a clean and intuitive user experience.
+
+##  10. Design Choices & Technical Debates
+
+During development, our team faced several architectural decisions.
+
+**Balancing Battery Life and Precision**
+* Our primary technical hurdle involved optimizing location tracking. While we initially weighed the merits of continuous GPS polling for high-resolution coordinates, it became clear that the resulting power consumption would lead to a poor user experience and high churn. To solve this, we integrated the Google Play Services Geofencing API. By offloading the monitoring to the Android system and only triggering the app when specific boundaries are breached, we achieved a sustainable equilibrium between notification accuracy and battery conservation.
+
+**Evaluating Local Storage Solutions**
+* We also carefully considered whether to utilize SharedPreferences, standard SQLite, or the Room Persistence Library for managing shopping data. SharedPreferences proved insufficient for the complex relational requirements of linking items to geographic data, and while raw SQLite was a viable engine, the manual overhead was excessive. We ultimately selected Room; its ability to provide compile-time query validation and its seamless fit with modern Android design patterns allowed us to minimize structural bugs and significantly shorten our development cycle.
+
+
+
+## 11. Scenarios
 To validate our architecture, we define the following core scenario (the "+1" of our view model), which illustrates how the logical, process, development, and physical views interact during a standard user journey:
 
 Scenario 1: Adding an Item and Triggering a Geofence Notification
@@ -124,14 +149,14 @@ Scenario 1: Adding an Item and Triggering a Geofence Notification
 
 * Event Handling & Notification (Process/Controller): The GeofenceReceiver.java wakes up in the background, intercepts the broadcast, and pushes a high-priority notification to the user's lock screen reminding them to buy "Milk".
 
-## 10. Size and Performance
+## 12. Size and Performance
 **Size**
 * The application footprint is expected to be minimal (under 20MB), as it relies primarily on native Android libraries and does not package heavy external media assets.
 
 **Performance**
 * The critical performance metric is the geofence transition latency. The system is designed to trigger a local notification within 1-2 minutes of the device's GPS hardware registering a boundary breach, dependent on the OS's internal hardware polling interval.
 
-## 11. Quality
+## 13. Quality
 To ensure system quality, the architecture prioritizes Reliability and Maintainability. Reliability is addressed by utilizing the robust Room database to prevent SQL injection and data corruption. Maintainability is achieved through strict adherence to the MVC design pattern, ensuring that UI updates, data storage, and background location services are thoroughly decoupled.
 
 ## Appendices
@@ -147,7 +172,7 @@ To ensure system quality, the architecture prioritizes Reliability and Maintaina
 
 * PR: Pull Request
 
-* TBA: To Be Added 
+* TBA: To Be Added
 
 ### Definitions
 * Geofence: A virtual geographic boundary defined by GPS coordinates and a specific radius.
