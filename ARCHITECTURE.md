@@ -13,12 +13,10 @@
 * [6. Process Architecture](#6-process-architecture)
 * [7. Development Architecture](#7-development-architecture)
 * [8. Physical Architecture](#8-physical-architecture)
-* [9. File Structure & Descriptions](#9-File-Structure-&-Descriptions)
-* [10. Design Choices & Technical Debates](#10.-Design-Choices-&-Technical-Debates)
-* [11. Scenarios](#11-scenarios)
-* [12. Size and Performance](#12-size-and-performance)
-* [13. Quality](#13-quality)
-* [14. Appendices](#14-appendices)
+* [9. Scenarios](#11-scenarios)
+* [10. Size and Performance](#12-size-and-performance)
+* [11. Quality](#13-quality)
+* [12. Appendices](#14-appendices)
 
 
 ## List of Figures
@@ -36,11 +34,11 @@ The scope of this document covers the internal structure of the local Android cl
 
 
 ## 2. References
-* Kruchten, P.B. (1995). "The 4+1 View Model of architecture". IEEE Software. *(Used as the foundational framework for structuring this document).*
+* Kruchten, P.B. (1995). "The 4+1 View Model of architecture". IEEE Software. 
 
-* Android Developers Documentation: Geofencing API and Background Location Limits. *(Referenced for designing the background lifecycle management in Section 6 and the geofence event flow in Scenario 1).*
+* Android Developers Documentation: Geofencing API and Background Location Limits. 
 
-* Android Developers Documentation: Save data in a local database using Room. *(Used for structuring the local SQLite database in the Development Architecture and modeling the UI-to-Backend interaction).*
+* Android Developers Documentation: Save data in a local database using Room.
 
 ## 3. Software Architecture
 **Documentation Style used**
@@ -52,24 +50,30 @@ The architecture of Yol Üstü is documented using the Kruchten 4+1 View Model. 
 
 The application strictly follows a Model-View-Controller (MVC) flow to manage interactions between the user interface and the local backend (Room Database). When a user inputs a new grocery item, the View (`activity_main.xml`) captures the data and sends it to the Controller (`MainActivity.java`). The Controller processes this input and asynchronously calls the Data Access Object (`ShoppingItemDao`) within the Model layer. The Model then executes the SQL query to persist the data in the local SQLite Database. Once saved, the Controller updates the `ListAdapter` to refresh the View.
 
-*Below is a UML Sequence Diagram illustrating this UI-to-Backend interaction:*
+*Below is a UML Layered Diagram illustrating this UI-to-Backend interaction:*
 
 ```mermaid
-sequenceDiagram
-    participant User
-    participant View as UI (Activity/Adapter)
-    participant Controller as MainActivity
-    participant DAO as ShoppingItemDao
-    participant DB as Room Database
+flowchart TD
+    subgraph Presentation Layer
+        UI("activity_main.xml (UI Layout)")
+        Adapter("ListAdapter (Data Binder)")
+    end
 
-    User->>View: Enters Item & Selects Market
-    View->>Controller: Click "Save"
-    Controller->>DAO: insert(ShoppingItem)
-    DAO->>DB: Execute INSERT Query
-    DB-->>DAO: Confirm Success
-    DAO-->>Controller: Return Status
-    Controller->>View: update RecyclerView(ListAdapter)
-    View-->>User: Display New Item
+    subgraph Business / Controller Layer
+        Main("MainActivity (Input Logic)")
+        Receiver("GeofenceReceiver (Background Logic)")
+    end
+
+    subgraph Data Layer
+        DAO("ShoppingItemDao (Data Access)")
+        DB[("ItemDatabase (Room/SQLite)")]
+    end
+
+    UI -->|Captures Input| Main
+    Adapter -.->|Updates View| Main
+    Main -->|Insert/Query| DAO
+    Receiver -->|Query Status| DAO
+    DAO -->|Execute SQL| DB
 ```
 
 ## 4. Architectural Goals & Constraints
@@ -109,6 +113,7 @@ This section outlines how the application operates in the background and manages
 * To prioritize battery longevity, the application employs an event-driven architecture rather than maintaining a constant foreground presence. This is achieved through the Android Geofencing API:
 
   - Idle State: The application process remains dormant when the user is outside the vicinity of a registered store, consuming negligible resources.
+  
   - System-Level Monitoring: Instead of taxing the battery with frequent GPS polling, the application delegates location tracking to the Android OS, which optimizes power consumption at the system level.
 
 **6.2 The Geofence Receiver Logic**
@@ -121,18 +126,23 @@ This section outlines how the application operates in the background and manages
 
   - Notification Delivery: After validation, the receiver invokes the system’s Notification Manager. This ensures the user receives their alert promptly, even if the application has been cleared from the recent tasks list.
 
+
 ## 7. Development Architecture
 The development architecture defines the software's static organization. For Yol Üstü, we utilize a standard Android Gradle build system structure.
+
 * **Data Persistence Layer:** We implement the Android Architecture Components Room library as an abstraction layer over SQLite. This ensures robust local data storage for our `ShoppingItem` entities and provides compile-time verification of SQL queries, minimizing runtime database crashes.
 
+**7.1 Design Choices & Technical Debates**
 
-## 8. Physical Architecture
-The physical architecture maps the software components to the hardware of the mobile device. Yol Üstü operates entirely on the user's Android smartphone without relying on external cloud servers for core business logic.
-* **Device Hardware:** The application interfaces directly with the device's physical GPS receiver and location sensors.
-* **Power Management:** To mitigate the high battery drain typical of continuous GPS polling, the application utilizes the hardware's low-power geofencing capabilities. The Android OS offloads the boundary monitoring to the physical modem/sensor hub, waking the main CPU only when a geographic threshold is crossed.
-* **Storage:** Data is persisted physically on the device's internal flash memory using the Room SQLite database.
+During development, our team faced several architectural decisions.
 
-## 9. File Structure & Descriptions
+**Balancing Battery Life and Precision**
+* Our primary technical hurdle involved optimizing location tracking. While we initially weighed the merits of continuous GPS polling for high-resolution coordinates, it became clear that the resulting power consumption would lead to a poor user experience and high churn. To solve this, we integrated the Google Play Services Geofencing API. By offloading the monitoring to the Android system and only triggering the app when specific boundaries are breached, we achieved a sustainable equilibrium between notification accuracy and battery conservation.
+
+**Evaluating Local Storage Solutions**
+* We also carefully considered whether to utilize SharedPreferences, standard SQLite, or the Room Persistence Library for managing shopping data. SharedPreferences proved insufficient for the complex relational requirements of linking items to geographic data, and while raw SQLite was a viable engine, the manual overhead was excessive. We ultimately selected Room; its ability to provide compile-time query validation and its seamless fit with modern Android design patterns allowed us to minimize structural bugs and significantly shorten our development cycle.
+
+**7.2 File Structure & Descriptions**
 
 Below is a breakdown of the core files written for this project and their specific responsibilities:
 
@@ -149,19 +159,17 @@ Below is a breakdown of the core files written for this project and their specif
 
 * `activity_main.xml`: The primary frontend layout file, designed using Material Design guidelines to provide a clean and intuitive user experience.
 
-##  10. Design Choices & Technical Debates
 
-During development, our team faced several architectural decisions.
+## 8. Physical Architecture
+The physical architecture maps the software components to the hardware of the mobile device. Yol Üstü operates entirely on the user's Android smartphone without relying on external cloud servers for core business logic.
+* **Device Hardware:** The application interfaces directly with the device's physical GPS receiver and location sensors.
 
-**Balancing Battery Life and Precision**
-* Our primary technical hurdle involved optimizing location tracking. While we initially weighed the merits of continuous GPS polling for high-resolution coordinates, it became clear that the resulting power consumption would lead to a poor user experience and high churn. To solve this, we integrated the Google Play Services Geofencing API. By offloading the monitoring to the Android system and only triggering the app when specific boundaries are breached, we achieved a sustainable equilibrium between notification accuracy and battery conservation.
+* **Power Management:** To mitigate the high battery drain typical of continuous GPS polling, the application utilizes the hardware's low-power geofencing capabilities. The Android OS offloads the boundary monitoring to the physical modem/sensor hub, waking the main CPU only when a geographic threshold is crossed.
 
-**Evaluating Local Storage Solutions**
-* We also carefully considered whether to utilize SharedPreferences, standard SQLite, or the Room Persistence Library for managing shopping data. SharedPreferences proved insufficient for the complex relational requirements of linking items to geographic data, and while raw SQLite was a viable engine, the manual overhead was excessive. We ultimately selected Room; its ability to provide compile-time query validation and its seamless fit with modern Android design patterns allowed us to minimize structural bugs and significantly shorten our development cycle.
-
+* **Storage:** Data is persisted physically on the device's internal flash memory using the Room SQLite database.
 
 
-## 11. Scenarios
+## 9. Scenarios
 To validate our architecture, we define the following core scenario (the "+1" of our view model), which illustrates how the logical, process, development, and physical views interact during a standard user journey:
 
 **Scenario 1:**  Adding an Item and Triggering a Geofence Notification
@@ -176,12 +184,14 @@ To validate our architecture, we define the following core scenario (the "+1" of
 
 * Event Handling & Notification (Process/Controller): The GeofenceReceiver.java wakes up in the background, intercepts the broadcast, and pushes a high-priority notification to the user's lock screen reminding them to buy "Milk".
 
+
 **Scenario 2: Viewing the Saved List on Application Startup**
 * User Input (Logical/View): The user launches the Yol Üstü application from their home screen.
 
 * Data Retrieval (Development/Model): The `MainActivity` (Controller) requests all saved items from the local Room Database via the `ShoppingItemDao`.
 
 * UI Update (Logical/View): The database returns the list of `ShoppingItem` objects. The `ListAdapter` binds this data to the `RecyclerView`, instantly displaying the user's pending grocery list on the screen.
+
 
 **Scenario 3: Marking a Grocery Item as Completed**
 * User Input (Logical/View): The user taps the checkbox next to "Milk" on the main screen to mark it as bought.
@@ -192,14 +202,14 @@ To validate our architecture, we define the following core scenario (the "+1" of
 
 * Hardware Adjustment (Physical): If the user completes the final item associated with "BİM", the application communicates with the device's GPS hardware to unregister the geofence for that specific market, conserving battery power.
 
-## 12. Size and Performance
+## 10. Size and Performance
 **Size**
 * The application footprint is expected to be minimal (under 20MB), as it relies primarily on native Android libraries and does not package heavy external media assets.
 
 **Performance**
 * The critical performance metric is the geofence transition latency. The system is designed to trigger a local notification within 1-2 minutes of the device's GPS hardware registering a boundary breach, dependent on the OS's internal hardware polling interval.
 
-## 13. Quality
+## 11. Quality
 To ensure system quality, the architecture prioritizes Reliability and Maintainability. Reliability is addressed by utilizing the robust Room database to prevent SQL injection and data corruption. Maintainability is achieved through strict adherence to the MVC design pattern, ensuring that UI updates, data storage, and background location services are thoroughly decoupled.
 
 ## Appendices
