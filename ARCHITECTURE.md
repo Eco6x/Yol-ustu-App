@@ -36,14 +36,41 @@ The scope of this document covers the internal structure of the local Android cl
 
 
 ## 2. References
-* Kruchten, P.B. (1995). "The 4+1 View Model of architecture". IEEE Software.
+* Kruchten, P.B. (1995). "The 4+1 View Model of architecture". IEEE Software. *(Used as the foundational framework for structuring this document).*
 
-* Android Developers Documentation: Geofencing API and Background Location Limits.
+* Android Developers Documentation: Geofencing API and Background Location Limits. *(Referenced for designing the background lifecycle management in Section 6 and the geofence event flow in Scenario 1).*
 
-* Android Developers Documentation: Save data in a local database using Room.
+* Android Developers Documentation: Save data in a local database using Room. *(Used for structuring the local SQLite database in the Development Architecture and modeling the UI-to-Backend interaction).*
 
 ## 3. Software Architecture
+**Documentation Style used**
+
+
 The architecture of Yol Üstü is documented using the Kruchten 4+1 View Model. This framework allows us to dissect the system from the perspectives of different stakeholders (end-users, developers, system engineers) by separating the system into Logical, Process, Development, and Physical views, unified by core Use Case Scenarios.
+
+**How does UI and Backend Interact**
+
+The application strictly follows a Model-View-Controller (MVC) flow to manage interactions between the user interface and the local backend (Room Database). When a user inputs a new grocery item, the View (`activity_main.xml`) captures the data and sends it to the Controller (`MainActivity.java`). The Controller processes this input and asynchronously calls the Data Access Object (`ShoppingItemDao`) within the Model layer. The Model then executes the SQL query to persist the data in the local SQLite Database. Once saved, the Controller updates the `ListAdapter` to refresh the View.
+
+*Below is a UML Sequence Diagram illustrating this UI-to-Backend interaction:*
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant View as UI (Activity/Adapter)
+    participant Controller as MainActivity
+    participant DAO as ShoppingItemDao
+    participant DB as Room Database
+
+    User->>View: Enters Item & Selects Market
+    View->>Controller: Click "Save"
+    Controller->>DAO: insert(ShoppingItem)
+    DAO->>DB: Execute INSERT Query
+    DB-->>DAO: Confirm Success
+    DAO-->>Controller: Return Status
+    Controller->>View: update RecyclerView(ListAdapter)
+    View-->>User: Display New Item
+```
 
 ## 4. Architectural Goals & Constraints
 **Goals**
@@ -137,7 +164,7 @@ During development, our team faced several architectural decisions.
 ## 11. Scenarios
 To validate our architecture, we define the following core scenario (the "+1" of our view model), which illustrates how the logical, process, development, and physical views interact during a standard user journey:
 
-Scenario 1: Adding an Item and Triggering a Geofence Notification
+**Scenario 1:**  Adding an Item and Triggering a Geofence Notification
 
 * User Input (Logical/View): The user opens the application and types "Milk" into the activity_main.xml input field and selects "BİM" as the target market.
 
@@ -148,6 +175,22 @@ Scenario 1: Adding an Item and Triggering a Geofence Notification
 * Background Processing (Process): The application enters an idle state. Later, when the user physically walks within a 100-meter radius of the BİM coordinates, the Android OS broadcasts a location event.
 
 * Event Handling & Notification (Process/Controller): The GeofenceReceiver.java wakes up in the background, intercepts the broadcast, and pushes a high-priority notification to the user's lock screen reminding them to buy "Milk".
+
+**Scenario 2: Viewing the Saved List on Application Startup**
+* User Input (Logical/View): The user launches the Yol Üstü application from their home screen.
+
+* Data Retrieval (Development/Model): The `MainActivity` (Controller) requests all saved items from the local Room Database via the `ShoppingItemDao`.
+
+* UI Update (Logical/View): The database returns the list of `ShoppingItem` objects. The `ListAdapter` binds this data to the `RecyclerView`, instantly displaying the user's pending grocery list on the screen.
+
+**Scenario 3: Marking a Grocery Item as Completed**
+* User Input (Logical/View): The user taps the checkbox next to "Milk" on the main screen to mark it as bought.
+
+* Data Modification (Development/Model): The `ListAdapter` captures the click and notifies the Controller of the state change. The Controller sends an update command to the `ShoppingItemDao`.
+
+* Background Processing (Process): The database updates the boolean "completed" status for that specific item.
+
+* Hardware Adjustment (Physical): If the user completes the final item associated with "BİM", the application communicates with the device's GPS hardware to unregister the geofence for that specific market, conserving battery power.
 
 ## 12. Size and Performance
 **Size**
