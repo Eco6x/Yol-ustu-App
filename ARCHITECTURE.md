@@ -73,6 +73,7 @@ The application strictly follows a Model-View-Controller (MVC) flow to manage in
 * The View: Represents the user interface. Built using Android XML layouts (activity_main.xml) and a RecyclerView with a custom ListAdapter, this layer strictly observes the data and renders the current shopping list to the user. It contains no heavy business logic.
 
 *Figure 1: The application's main user interface.*
+
 ![Yol Üstü UI Overview](images/Main_UI.jpg)
 
 * The Controller: Acts as the bridge between the View and the Model.
@@ -161,7 +162,9 @@ To validate our architecture, we define the following core scenario (the "+1" of
 * Event Handling & Notification (Process/Controller): The GeofenceReceiver.java wakes up in the background, intercepts the broadcast, and pushes a high-priority notification to the user's lock screen reminding them to buy "Milk".
 
 *Figure 2: a picture showing the Geofence Notification permission:*
+
 ![Yol Üstü UI Overview](images/Location_Permission.jpg)
+
 
 
 **Scenario 2: Viewing the Saved List on Application Startup**
@@ -171,8 +174,12 @@ To validate our architecture, we define the following core scenario (the "+1" of
 
 * UI Update (Logical/View): The database returns the list of `ShoppingItem` objects. The `ListAdapter` binds this data to the `RecyclerView`, instantly displaying the user's pending grocery list on the screen.
 
+
 *Figure 3: a picture showing the saved list after entering the application:*
-![Yol Üstü UI Overview](images/Saved_List.jpg)
+
+![Yol Üstü UI Overview](images/Can_mark_items.jpg)
+
+
 
 **Scenario 3: Marking a Grocery Item as Completed**
 * User Input (Logical/View): The user taps the checkbox next to "Milk" on the main screen to mark it as bought.
@@ -183,8 +190,11 @@ To validate our architecture, we define the following core scenario (the "+1" of
 
 * Hardware Adjustment (Physical): If the user completes the final item associated with "BİM", the application communicates with the device's GPS hardware to unregister the geofence for that specific market, conserving battery power.
 
-*Figure 4: a picture showing the saved list after entering the application:*
+*Figure 4: a picture showing the saved list after entering the application:* 
+
 ![Yol Üstü UI Overview](images/Can_mark_items.jpg)
+
+
 
 ## 10. Size and Performance
 **Size**
