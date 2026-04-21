@@ -9,6 +9,7 @@ import java.util.List;
 
 @Dao
 public interface ShoppingItemDao {
+
     // Command to save a new item
     @Insert
     void insert(ShoppingItem item);
