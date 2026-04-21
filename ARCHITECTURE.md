@@ -22,10 +22,10 @@
 ## List of Figures
 | Figure No | Description | Section Reference |
 | :--- | :--- | :--- |
-| **Figure 1** | Main UI Screen| [5. Logical Architecture](#images/test1.png) |
-| **Figure 2** | N/A | TBA |
-| **Figure 3** | N/A | TBA |
-| **Figure 4** | N/A | TBA |
+| **Figure 1** | Main UI Screen| [5. Logical Architecture](#images/Main_UI.jpg) |
+| **Figure 2** | Location Permission Screen| [9. Scenarios](#images/Location_Permission.jpg) |
+| **Figure 3** | Saved List Screen| [9. Scenarios](#images/Saved_List.jpg) |
+| **Figure 4** | Mark Items Screen| [9. Scenarios](#images/Can_mark_items.jpg) |
 
 ## 1. Scope
 This document details the software architecture of the Yol Üstü mobile application. Yol Üstü is a location-aware Android shopping list designed to cross-reference user-defined grocery items with the real-world physical locations of supermarkets (e.g., BİM, A101, Şok).
@@ -52,29 +52,7 @@ The application strictly follows a Model-View-Controller (MVC) flow to manage in
 
 *Below is a UML Layered Diagram illustrating this UI-to-Backend interaction:*
 
-```mermaid
-flowchart TD
-    subgraph Presentation Layer
-        UI("activity_main.xml (UI Layout)")
-        Adapter("ListAdapter (Data Binder)")
-    end
-
-    subgraph Business / Controller Layer
-        Main("MainActivity (Input Logic)")
-        Receiver("GeofenceReceiver (Background Logic)")
-    end
-
-    subgraph Data Layer
-        DAO("ShoppingItemDao (Data Access)")
-        DB[("ItemDatabase (Room/SQLite)")]
-    end
-
-    UI -->|Captures Input| Main
-    Adapter -.->|Updates View| Main
-    Main -->|Insert/Query| DAO
-    Receiver -->|Query Status| DAO
-    DAO -->|Execute SQL| DB
-```
+![Yol Üstü UI Overview](images/UML_diagram.jpg)
 
 ## 4. Architectural Goals & Constraints
 **Goals**
@@ -95,9 +73,7 @@ flowchart TD
 * The View: Represents the user interface. Built using Android XML layouts (activity_main.xml) and a RecyclerView with a custom ListAdapter, this layer strictly observes the data and renders the current shopping list to the user. It contains no heavy business logic.
 
 *Figure 1: The application's main user interface.*
-
-
-![Yol Üstü UI Overview](images/test1.png)
+![Yol Üstü UI Overview](images/Main_UI.jpg)
 
 * The Controller: Acts as the bridge between the View and the Model.
 
@@ -184,6 +160,9 @@ To validate our architecture, we define the following core scenario (the "+1" of
 
 * Event Handling & Notification (Process/Controller): The GeofenceReceiver.java wakes up in the background, intercepts the broadcast, and pushes a high-priority notification to the user's lock screen reminding them to buy "Milk".
 
+*Figure 2: a picture showing the Geofence Notification permission:*
+![Yol Üstü UI Overview](images/Location_Permission.jpg)
+
 
 **Scenario 2: Viewing the Saved List on Application Startup**
 * User Input (Logical/View): The user launches the Yol Üstü application from their home screen.
@@ -192,6 +171,8 @@ To validate our architecture, we define the following core scenario (the "+1" of
 
 * UI Update (Logical/View): The database returns the list of `ShoppingItem` objects. The `ListAdapter` binds this data to the `RecyclerView`, instantly displaying the user's pending grocery list on the screen.
 
+*Figure 3: a picture showing the saved list after entering the application:*
+![Yol Üstü UI Overview](images/Saved_List.jpg)
 
 **Scenario 3: Marking a Grocery Item as Completed**
 * User Input (Logical/View): The user taps the checkbox next to "Milk" on the main screen to mark it as bought.
@@ -201,6 +182,9 @@ To validate our architecture, we define the following core scenario (the "+1" of
 * Background Processing (Process): The database updates the boolean "completed" status for that specific item.
 
 * Hardware Adjustment (Physical): If the user completes the final item associated with "BİM", the application communicates with the device's GPS hardware to unregister the geofence for that specific market, conserving battery power.
+
+*Figure 4: a picture showing the saved list after entering the application:*
+![Yol Üstü UI Overview](images/Can_mark_items.jpg)
 
 ## 10. Size and Performance
 **Size**
