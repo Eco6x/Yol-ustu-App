@@ -6,6 +6,9 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
@@ -14,7 +17,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -38,6 +44,8 @@ public class MainActivity extends AppCompatActivity {
 
     private ItemDatabase db;
     private ExecutorService executorService;
+    
+    private static final int LOCATION_PERMISSION_REQUEST_CODE = 100;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,6 +97,9 @@ public class MainActivity extends AppCompatActivity {
         // Initial empty state check and load
         loadItems();
         
+        // Request Permissions
+        checkLocationPermissions();
+        
         // Setup Add Button
         fabAdd.setOnClickListener(v -> {
             String itemName = etItemName.getText().toString().trim();
@@ -139,6 +150,34 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
             });
+        }
+    }
+    
+    private void checkLocationPermissions() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, 
+                new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, 
+                LOCATION_PERMISSION_REQUEST_CODE);
+        } else {
+            requestBackgroundLocationIfNecessary();
+        }
+    }
+
+    private void requestBackgroundLocationIfNecessary() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_BACKGROUND_LOCATION},
+                    LOCATION_PERMISSION_REQUEST_CODE + 1);
+            }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            requestBackgroundLocationIfNecessary();
         }
     }
     
