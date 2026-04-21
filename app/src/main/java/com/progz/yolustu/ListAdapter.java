@@ -17,16 +17,21 @@ import java.util.List;
 
 public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ItemViewHolder> {
 
-    // This is a temporary list until Abdulkadir finishes the database
-    private List<ShoppingItem> shoppingList = new ArrayList<>();
-
-    public void addItem(ShoppingItem item) {
-        shoppingList.add(item);
-        notifyItemInserted(shoppingList.size() - 1);
+    public interface OnItemInteractionListener {
+        void onUpdate(ShoppingItem item);
+        void onDelete(ShoppingItem item);
     }
 
-    public int getItemsCount() {
-        return shoppingList.size();
+    private List<ShoppingItem> shoppingList = new ArrayList<>();
+    private OnItemInteractionListener listener;
+
+    public ListAdapter(OnItemInteractionListener listener) {
+        this.listener = listener;
+    }
+
+    public void setItems(List<ShoppingItem> items) {
+        this.shoppingList = items;
+        notifyDataSetChanged();
     }
 
     @NonNull
@@ -52,13 +57,15 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ItemViewHolder
         holder.checkboxItem.setOnCheckedChangeListener((buttonView, isChecked) -> {
             currentItem.setCompleted(isChecked);
             applyStrikethrough(holder.textViewItemName, isChecked);
+            if (listener != null) {
+                listener.onUpdate(currentItem);
+            }
         });
         
         holder.imageViewDelete.setOnClickListener(v -> {
             int currentPos = holder.getAdapterPosition();
-            if (currentPos != RecyclerView.NO_POSITION) {
-                shoppingList.remove(currentPos);
-                notifyItemRemoved(currentPos);
+            if (currentPos != RecyclerView.NO_POSITION && listener != null) {
+                listener.onDelete(currentItem);
             }
         });
     }

@@ -9,6 +9,10 @@ import android.widget.AutoCompleteTextView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
@@ -31,6 +35,9 @@ public class MainActivity extends AppCompatActivity {
     
     private ListAdapter adapter;
     private String[] defaultMarkets = new String[]{"BİM", "A101", "Şok", "Migros"};
+
+    private ItemDatabase db;
+    private ExecutorService executorService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,13 +62,32 @@ public class MainActivity extends AppCompatActivity {
         ArrayAdapter<String> dropdownAdapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, defaultMarkets);
         spinnerMarket.setAdapter(dropdownAdapter);
 
+        // Setup Database & Executor
+        executorService = Executors.newSingleThreadExecutor();
+        db = ItemDatabase.getInstance(this);
+
         // Setup RecyclerView
-        adapter = new ListAdapter();
+        adapter = new ListAdapter(new ListAdapter.OnItemInteractionListener() {
+            @Override
+            public void onUpdate(ShoppingItem item) {
+                executorService.execute(() -> {
+                    db.shoppingItemDao().update(item);
+                });
+            }
+
+            @Override
+            public void onDelete(ShoppingItem item) {
+                executorService.execute(() -> {
+                    db.shoppingItemDao().delete(item);
+                    loadItems();
+                });
+            }
+        });
         rvShoppingList.setLayoutManager(new LinearLayoutManager(this));
         rvShoppingList.setAdapter(adapter);
-        
-        // Initial empty state check
-        updateEmptyState();
+
+        // Initial empty state check and load
+        loadItems();
         
         // Setup Add Button
         fabAdd.setOnClickListener(v -> {
@@ -77,9 +103,12 @@ public class MainActivity extends AppCompatActivity {
                 marketText = "Genel"; // Provide "General" fallback
             }
 
-            // Create item and add via Adapter
+            // Create item and add via Background Thread
             ShoppingItem newItem = new ShoppingItem(itemName, marketText);
-            adapter.addItem(newItem);
+            executorService.execute(() -> {
+                db.shoppingItemDao().insert(newItem);
+                loadItems();
+            });
             
             // UI reset
             etItemName.setText("");
@@ -93,33 +122,24 @@ public class MainActivity extends AppCompatActivity {
                 imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
             }
             
-            updateEmptyState();
-            
             // Show Feedback
             Snackbar.make(findViewById(R.id.main), "Item added to " + marketText, Snackbar.LENGTH_SHORT).show();
         });
-        
-        // Optional: observe adapter data changes if possible, or handle directly above
-        adapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
-            @Override
-            public void onChanged() {
-                super.onChanged();
-                updateEmptyState();
-            }
+    }
 
-            @Override
-            public void onItemRangeInserted(int positionStart, int itemCount) {
-                super.onItemRangeInserted(positionStart, itemCount);
-                updateEmptyState();
-                rvShoppingList.smoothScrollToPosition(adapter.getItemCount() - 1);
-            }
-
-            @Override
-            public void onItemRangeRemoved(int positionStart, int itemCount) {
-                super.onItemRangeRemoved(positionStart, itemCount);
-                updateEmptyState();
-            }
-        });
+    private void loadItems() {
+        if (executorService != null) {
+            executorService.execute(() -> {
+                List<ShoppingItem> items = db.shoppingItemDao().getAllItems();
+                runOnUiThread(() -> {
+                    adapter.setItems(items);
+                    updateEmptyState();
+                    if (items.size() > 0) {
+                        rvShoppingList.smoothScrollToPosition(items.size() - 1);
+                    }
+                });
+            });
+        }
     }
     
     private void updateEmptyState() {
