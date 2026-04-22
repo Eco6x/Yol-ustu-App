@@ -1,13 +1,10 @@
 package com.progz.yolustu;
 
 import android.Manifest;
-import android.app.PendingIntent;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
@@ -15,30 +12,26 @@ import android.widget.AutoCompleteTextView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.gms.location.Geofence;
-import com.google.android.gms.location.GeofencingClient;
-import com.google.android.gms.location.GeofencingRequest;
-import com.google.android.gms.location.LocationServices;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputEditText;
 
 public class MainActivity extends AppCompatActivity {
-
-    private static final String TAG = "MainActivity";
 
     private TextInputEditText etItemName;
     private AutoCompleteTextView spinnerMarket;
@@ -51,34 +44,8 @@ public class MainActivity extends AppCompatActivity {
 
     private ItemDatabase db;
     private ExecutorService executorService;
-    private GeofencingClient geofencingClient;
-    private PendingIntent geofencePendingIntent;
-
+    
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 100;
-    private static final float GEOFENCE_RADIUS_METERS = 150f;
-
-    // ─── Market Locations (Ankara – edit coordinates to match your real local
-    // stores) ───
-    private static final double[][] MARKET_COORDS = {
-            // BİM stores
-            { 39.9208, 32.8541 }, // BİM – Kızılay
-            { 39.9355, 32.8597 }, // BİM – Ulus
-            { 39.9073, 32.8616 }, // BİM – Bahçelievler
-            // A101 stores
-            { 39.9229, 32.8600 }, // A101 – Kızılay
-            { 39.9420, 32.8390 }, // A101 – Etlik
-            // Şok stores
-            { 39.9180, 32.8510 }, // Şok – Kızılay
-            { 39.9310, 32.8660 }, // Şok – Çankaya
-            // Migros stores
-            { 39.9253, 32.8627 }, // Migros – Kızılay
-    };
-    private static final String[] MARKET_NAMES = {
-            "BİM", "BİM", "BİM",
-            "A101", "A101",
-            "Şok", "Şok",
-            "Migros"
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,20 +67,21 @@ public class MainActivity extends AppCompatActivity {
         emptyState = findViewById(R.id.emptyState);
 
         // Setup Dropdown
-        ArrayAdapter<String> dropdownAdapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_dropdown_item_1line, defaultMarkets);
+        ArrayAdapter<String> dropdownAdapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line,
+                defaultMarkets);
         spinnerMarket.setAdapter(dropdownAdapter);
 
-        // Setup Database, Executor & GeofencingClient
+        // Setup Database & Executor
         executorService = Executors.newSingleThreadExecutor();
         db = ItemDatabase.getInstance(this);
-        geofencingClient = LocationServices.getGeofencingClient(this);
 
         // Setup RecyclerView
         adapter = new ListAdapter(new ListAdapter.OnItemInteractionListener() {
             @Override
             public void onUpdate(ShoppingItem item) {
-                executorService.execute(() -> db.shoppingItemDao().update(item));
+                executorService.execute(() -> {
+                    db.shoppingItemDao().update(item);
+                });
             }
 
             @Override
@@ -127,7 +95,10 @@ public class MainActivity extends AppCompatActivity {
         rvShoppingList.setLayoutManager(new LinearLayoutManager(this));
         rvShoppingList.setAdapter(adapter);
 
+        // Initial empty state check and load
         loadItems();
+        
+        // Request Permissions
         checkLocationPermissions();
 
         // Setup Add Button
@@ -136,133 +107,37 @@ public class MainActivity extends AppCompatActivity {
             String marketText = spinnerMarket.getText().toString().trim();
 
             if (itemName.isEmpty()) {
-                Toast.makeText(this, "Lütfen bir ürün adı girin.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Please enter an item name.", Toast.LENGTH_SHORT).show();
                 return;
             }
-            if (marketText.isEmpty())
-                marketText = "Genel";
 
+            if (marketText.isEmpty()) {
+                marketText = "Genel"; // Provide "General" fallback
+            }
+
+            // Create item and add via Background Thread
             ShoppingItem newItem = new ShoppingItem(itemName, marketText);
-            String finalMarket = marketText;
             executorService.execute(() -> {
                 db.shoppingItemDao().insert(newItem);
                 loadItems();
             });
 
+            // UI reset
             etItemName.setText("");
             etItemName.clearFocus();
             spinnerMarket.clearFocus();
 
+            // Hide keyboard
             View view = this.getCurrentFocus();
             if (view != null) {
                 InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                 imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
             }
 
-            Snackbar.make(findViewById(R.id.main), finalMarket + " listesine eklendi ✓", Snackbar.LENGTH_SHORT).show();
+            // Show Feedback
+            Snackbar.make(findViewById(R.id.main), "Item added to " + marketText, Snackbar.LENGTH_SHORT).show();
         });
     }
-
-    // ─── Location & Geofencing ────────────────────────────────────────────────
-
-    private void checkLocationPermissions() {
-        // On Android 13+ we also need notification permission
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this,
-                    Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this,
-                        new String[] { Manifest.permission.POST_NOTIFICATIONS },
-                        LOCATION_PERMISSION_REQUEST_CODE + 2);
-            }
-        }
-
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-
-            ActivityCompat.requestPermissions(this,
-                    new String[] { Manifest.permission.ACCESS_FINE_LOCATION,
-                            Manifest.permission.ACCESS_COARSE_LOCATION },
-                    LOCATION_PERMISSION_REQUEST_CODE);
-        } else {
-            requestBackgroundLocationIfNecessary();
-        }
-    }
-
-    private void requestBackgroundLocationIfNecessary() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            if (ContextCompat.checkSelfPermission(this,
-                    Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this,
-                        new String[] { Manifest.permission.ACCESS_BACKGROUND_LOCATION },
-                        LOCATION_PERMISSION_REQUEST_CODE + 1);
-            } else {
-                registerGeofences();
-            }
-        } else {
-            registerGeofences();
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-            @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE
-                && grantResults.length > 0
-                && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            requestBackgroundLocationIfNecessary();
-        } else if (requestCode == LOCATION_PERMISSION_REQUEST_CODE + 1
-                && grantResults.length > 0
-                && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            registerGeofences();
-        }
-    }
-
-    private void registerGeofences() {
-        if (ActivityCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            Log.w(TAG, "Skipping geofence registration — location permission not granted.");
-            return;
-        }
-
-        List<Geofence> geofenceList = new ArrayList<>();
-        for (int i = 0; i < MARKET_COORDS.length; i++) {
-            // Use index as suffix to make each request ID unique for multiple branches of
-            // same chain
-            String requestId = MARKET_NAMES[i] + "_" + i;
-            geofenceList.add(new Geofence.Builder()
-                    .setRequestId(requestId)
-                    .setCircularRegion(
-                            MARKET_COORDS[i][0], // latitude
-                            MARKET_COORDS[i][1], // longitude
-                            GEOFENCE_RADIUS_METERS // 150 metre radius
-                    )
-                    .setExpirationDuration(Geofence.NEVER_EXPIRE)
-                    .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
-                    .build());
-        }
-
-        GeofencingRequest request = new GeofencingRequest.Builder()
-                .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
-                .addGeofences(geofenceList)
-                .build();
-
-        geofencingClient.addGeofences(request, getGeofencePendingIntent())
-                .addOnSuccessListener(
-                        aVoid -> Log.d(TAG, "Geofences registered: " + geofenceList.size() + " locations."))
-                .addOnFailureListener(e -> Log.e(TAG, "Geofence registration failed: " + e.getMessage()));
-    }
-
-    private PendingIntent getGeofencePendingIntent() {
-        if (geofencePendingIntent != null)
-            return geofencePendingIntent;
-        Intent intent = new Intent(this, GeofenceReceiver.class);
-        geofencePendingIntent = PendingIntent.getBroadcast(this, 0, intent,
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_MUTABLE);
-        return geofencePendingIntent;
-    }
-
-    // ─── Data ─────────────────────────────────────────────────────────────────
 
     private void loadItems() {
         if (executorService != null) {
@@ -271,11 +146,39 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     adapter.setItems(items);
                     updateEmptyState();
-                    if (!items.isEmpty()) {
+                    if (items.size() > 0) {
                         rvShoppingList.smoothScrollToPosition(items.size() - 1);
                     }
                 });
             });
+        }
+    }
+
+    private void checkLocationPermissions() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, 
+                new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, 
+                LOCATION_PERMISSION_REQUEST_CODE);
+        } else {
+            requestBackgroundLocationIfNecessary();
+        }
+    }
+
+    private void requestBackgroundLocationIfNecessary() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_BACKGROUND_LOCATION},
+                    LOCATION_PERMISSION_REQUEST_CODE + 1);
+            }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            requestBackgroundLocationIfNecessary();
         }
     }
 
