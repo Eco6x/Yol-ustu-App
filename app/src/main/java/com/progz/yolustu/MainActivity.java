@@ -235,9 +235,9 @@ public class MainActivity extends AppCompatActivity {
                     Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                 requestBackgroundLocationIfNecessary();
             }
-        } else if (requestCode == LOCATION_PERMISSION_REQUEST_CODE + 1
-                && grantResults.length > 0
-                && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        } else if (requestCode == LOCATION_PERMISSION_REQUEST_CODE + 1) {
+            // Register geofences anyway; if background is denied but fine location is granted, 
+            // it will still work while the app is open.
             registerGeofences();
         }
     }
