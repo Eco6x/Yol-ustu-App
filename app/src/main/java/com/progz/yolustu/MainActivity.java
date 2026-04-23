@@ -178,21 +178,25 @@ public class MainActivity extends AppCompatActivity {
     // ─── Location & Geofencing ────────────────────────────────────────────────
 
     private void checkLocationPermissions() {
+        List<String> permissionsToRequest = new ArrayList<>();
+
         // On Android 13+ we also need notification permission
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this,
                     Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this,
-                        new String[] { Manifest.permission.POST_NOTIFICATIONS },
-                        LOCATION_PERMISSION_REQUEST_CODE + 2);
+                permissionsToRequest.add(Manifest.permission.POST_NOTIFICATIONS);
             }
         }
 
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            permissionsToRequest.add(Manifest.permission.ACCESS_FINE_LOCATION);
+            permissionsToRequest.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+        }
+
+        if (!permissionsToRequest.isEmpty()) {
             ActivityCompat.requestPermissions(this,
-                    new String[] { Manifest.permission.ACCESS_FINE_LOCATION,
-                            Manifest.permission.ACCESS_COARSE_LOCATION },
+                    permissionsToRequest.toArray(new String[0]),
                     LOCATION_PERMISSION_REQUEST_CODE);
         } else {
             requestBackgroundLocationIfNecessary();
@@ -218,10 +222,19 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
             @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE
-                && grantResults.length > 0
-                && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            requestBackgroundLocationIfNecessary();
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            boolean locationGranted = false;
+            for (int i = 0; i < permissions.length; i++) {
+                if (permissions[i].equals(Manifest.permission.ACCESS_FINE_LOCATION) &&
+                        grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                    locationGranted = true;
+                }
+            }
+            // If location was already granted previously, but we requested notifications now
+            if (locationGranted || ContextCompat.checkSelfPermission(this,
+                    Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                requestBackgroundLocationIfNecessary();
+            }
         } else if (requestCode == LOCATION_PERMISSION_REQUEST_CODE + 1
                 && grantResults.length > 0
                 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
