@@ -13,19 +13,19 @@
 * [6. Process Architecture](#6-process-architecture)
 * [7. Development Architecture](#7-development-architecture)
 * [8. Physical Architecture](#8-physical-architecture)
-* [9. Scenarios](#11-scenarios)
-* [10. Size and Performance](#12-size-and-performance)
-* [11. Quality](#13-quality)
-* [12. Appendices](#14-appendices)
+* [9. Scenarios](#9-scenarios)
+* [10. Size and Performance](#10-size-and-performance)
+* [11. Quality](#11-quality)
+* [12. Appendices](#appendices)
 
 
 ## List of Figures
 | Figure No | Description | Section Reference |
 | :--- | :--- | :--- |
-| **Figure 1** | Main UI Screen| [5. Logical Architecture](#images/Main_UI.jpg) |
-| **Figure 2** | Location Permission Screen| [9. Scenarios](#images/Location_Permission.jpg) |
-| **Figure 3** | Saved List Screen| [9. Scenarios](#images/Saved_List.jpg) |
-| **Figure 4** | Mark Items Screen| [9. Scenarios](#images/Can_mark_items.jpg) |
+| **Figure 1** | Main UI Screen| [5. Logical Architecture](#5-logical-architecture) |
+| **Figure 2** | Location Permission Screen| [9. Scenarios](#9-scenarios) |
+| **Figure 3** | Saved List Screen| [9. Scenarios](#9-scenarios) |
+| **Figure 4** | Mark Items Screen| [9. Scenarios](#9-scenarios) |
 
 ## 1. Scope
 This document details the software architecture of the Yol Üstü mobile application. Yol Üstü is a location-aware Android shopping list designed to cross-reference user-defined grocery items with the real-world physical locations of supermarkets (e.g., BİM, A101, Şok).
@@ -177,7 +177,7 @@ To validate our architecture, we define the following core scenario (the "+1" of
 
 *Figure 3: a picture showing the saved list after entering the application:*
 
-![Yol Üstü UI Overview](images/Can_mark_items.jpg)
+![Yol Üstü UI Overview](images/Saved_List.jpg)
 
 
 
