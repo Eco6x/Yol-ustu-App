@@ -1,7 +1,8 @@
 # 📍 Yol Üstü:  Location-Based Grocery Reminder
 
 **GitHub Repository:** [https://github.com/Eco6x/Yol-ustu-App](https://github.com/Eco6x/Yol-ustu-App)
-**Video Demo:** [Insert YouTube URL Here]
+
+**Video Demo:** https://youtu.be/G3VY8xFFCk4
 
 ## ✍🏻 Project Description
 
